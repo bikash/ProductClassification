@@ -88,12 +88,13 @@ write.csv(submit, file = "output/submit_1.csv", row.names = FALSE)
 
 
 ### Condition Inference Random Forest
+library(party)
 print("Prediction using Condition Inference Random Forest......")
-fit <- cforest(as.factor(target) ~ .,
+c.fit <- cforest(as.factor(target) ~ .,
                data = train2, controls=cforest_unbiased(ntree=50, mtry=3))
 
 ## Tree structure
-fit = ctree(as.factor(target) ~.,
+c.fit = ctree(as.factor(target) ~.,
             data = train2,   
             controls = ctree_control(
               teststat="quad",
@@ -103,11 +104,11 @@ fit = ctree(as.factor(target) ~.,
               minbucket=5,
               maxdepth=0
             ))
-plot(fit)
-fancyRpartPlot(fit)
+prp(c.fit)
+fancyRpartPlot(c.fit)
 
 #prediction
-Prediction <- predict(fit, test, OOB=TRUE, type = "response")
+Prediction <- predict(c.fit, test, OOB=TRUE, type = "response")
 #prop.table(table(test$target, Prediction),1)
 ## calculate accuracy of model
 #accuracy = sum(Prediction==test$target)/length(Prediction)
@@ -117,3 +118,6 @@ out <- data.frame(id = test$id, Prediction)
 write.csv(out, file = "output/ciRandomForest-predict1.csv", row.names = FALSE)
 #########################################################################
 #########################################################################
+
+##SVM
+
