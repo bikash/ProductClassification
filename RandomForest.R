@@ -38,9 +38,9 @@ test <- read.csv("data/test.csv", header=TRUE)
 ##########################################################################
 
 head(train) ## column name -> id, feat_1,.......feat_93, target
-# train1 = train[1:5000,]
-# test1 = train[5001:10000,]
-
+ train1 = train[1:60000,]
+ test1 = train[60001:67000,]
+ train2 <- train1[,-1]
 ## boosting
 # fit <- boosting(target~., data=train1, boos=TRUE, mfinal=10)
 # pred <- predict.boosting(fit,newdata=test1)
@@ -84,6 +84,13 @@ me.randomforest <- function(train2,test)
   dev.off()
   # use the random forest model to create a prediction
   pred <- predict(fit,test,type="prob")
+  
+  #########################################################################
+  ## calculate accuracy of model
+  accuracy = sum(pred==test$target)/length(pred)
+  print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 81.84% accuracy of model using random forest
+  #########################################################################
+  
   submit <- data.frame(id = test$id, pred)
   write.csv(submit, file = "output/submit_1.csv", row.names = FALSE)
 }

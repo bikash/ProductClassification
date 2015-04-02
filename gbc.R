@@ -17,19 +17,23 @@
 getwd()
 setwd("/Users/bikash/repos/kaggle/ProductClassification/")
 
-library(Rtsne)
-train <- read.csv("data/train.csv", stringsAsFactors=FALSE)[, -1]
+library(ada)
 
-set.seed(1234)
-tsne_out_train <- Rtsne(as.matrix(train[,1:93]), check_duplicates = FALSE, pca = TRUE, 
-                       perplexity=30, theta=0.5, dims=2)
+##########################################################################
+########Cleaning up training dataset #####################################
+##########################################################################
+print("Data Cleaning up process......")
+train <- read.csv("data/train.csv", header=TRUE)
+test <- read.csv("data/test.csv", header=TRUE)
+##########################################################################
+train1 = train[1:10000,]
+test1 = train[10001:67000,]
 
-my_palette = c("red", "blue", "green", "brown", "magenta", "orange", "cyan", "black", "yellow")
-palette(my_palette)
+default=rpart.control()
 
-plot(tsne_out_train$Y, xlab="", ylab="", col=as.factor(train$target), pch=".", cex=4, axes=FALSE)
+m <-glm(target~., data = train1)
 
-legend("bottomleft", c("1","2", "3", "4", "5", "6", "7", "8", "9"),  
-       lty=c(1,1), lwd=c(5,5), col=my_palette, bty="n", cex = 0.7) 
+gdis<-ada(target~.,data=train1,iter=100,loss="e",type="discrete",control=default)
+plot(gdis)
 
-palette("default")
+pairs(gdis,train[,-1],maxvar=3)
