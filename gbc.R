@@ -25,20 +25,33 @@ library(ada)
 print("Data Cleaning up process......")
 train <- read.csv("data/train.csv", header=TRUE)
 test <- read.csv("data/test.csv", header=TRUE)
+train$class[train$target == "Class_1"] <- 1
+train$class[train$target == "Class_2"] <- 2
+train$class[train$target == "Class_3"] <- 3
+train$class[train$target == "Class_4"] <- 4
+train$class[train$target == "Class_5"] <- 5
+train$class[train$target == "Class_6"] <- 6
+train$class[train$target == "Class_7"] <- 7
+train$class[train$target == "Class_8"] <- 8
+train$class[train$target == "Class_9"] <- 9
 ##########################################################################
-train1 = train[1:50000,]
-test1 = train[50001:62000,]
+train2 = train[,-1]
+train2 = train2[,-94]
+train1 = train2[1:61000,]
+test1 = train2[61001:61878,]
+
+
 
 
 library(rpart)
-fit <- rpart(target ~ ., data=train1, method="class")
+fit <- rpart(class ~ ., data=train1, method="class")
 fancyRpartPlot(fit)
 # prediction
 pred <- predict(fit, test1, type = "class")
-out <- data.frame(id = test1$id, target = pred)
+out <- data.frame(id = train$id[61001:61878], class = pred)
 write.csv(out, file = "output/Decision_tree.csv", row.names = FALSE)
 ## calculate accuracy of model
-accuracy = sum(Prediction==test$Survived)/length(Prediction)
+accuracy = sum(pred==test1$class)/length(pred)
 print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 81.84% accuracy of model using random forest
 #########################################################################
 
