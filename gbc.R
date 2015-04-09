@@ -25,6 +25,8 @@ library(ada)
 print("Data Cleaning up process......")
 train <- read.csv("data/train.csv", header=TRUE)
 test <- read.csv("data/test.csv", header=TRUE)
+
+### Label data
 train$class[train$target == "Class_1"] <- 1
 train$class[train$target == "Class_2"] <- 2
 train$class[train$target == "Class_3"] <- 3
@@ -51,7 +53,7 @@ pred <- predict(fit, test1, type = "class")
 out <- data.frame(id = train$id[61001:61878], class = pred)
 write.csv(out, file = "output/Decision_tree.csv", row.names = FALSE)
 ## calculate accuracy of model
-accuracy = sum(pred==test1$class)/length(pred)
+accuracy = sum(out$class==test1$class)/length(pred)
 print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 81.84% accuracy of model using random forest
 #########################################################################
 
