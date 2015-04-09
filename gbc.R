@@ -39,8 +39,8 @@ train$class[train$target == "Class_9"] <- 9
 ##########################################################################
 train2 = train[,-1]
 train2 = train2[,-94]
-train1 = train2[1:61000,]
-test1 = train2[61001:61878,]
+train1 = train2[1000:61878,]
+test1 = train2[1:1000,]
 
 
 
@@ -50,12 +50,17 @@ fit <- rpart(class ~ ., data=train1, method="class")
 fancyRpartPlot(fit)
 # prediction
 pred <- predict(fit, test1, type = "class")
-out <- data.frame(id = train$id[61001:61878], class = pred)
+out <- data.frame(id = train$id[1:1000], class = pred)
 write.csv(out, file = "output/Decision_tree.csv", row.names = FALSE)
 ## calculate accuracy of model
 accuracy = sum(out$class==test1$class)/length(pred)
 print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 81.84% accuracy of model using random forest
 #########################################################################
+
+
+
+## Random Forest
+fit <- randomForest(class ~ ., data=train1, ntree=500, method = "class")
 
 
 default=rpart.control()
