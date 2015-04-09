@@ -26,8 +26,22 @@ print("Data Cleaning up process......")
 train <- read.csv("data/train.csv", header=TRUE)
 test <- read.csv("data/test.csv", header=TRUE)
 ##########################################################################
-train1 = train[1:10000,]
-test1 = train[10001:67000,]
+train1 = train[1:50000,]
+test1 = train[50001:62000,]
+
+
+library(rpart)
+fit <- rpart(target ~ ., data=train1, method="class")
+fancyRpartPlot(fit)
+# prediction
+pred <- predict(fit, test1, type = "class")
+out <- data.frame(id = test1$id, target = pred)
+write.csv(out, file = "output/Decision_tree.csv", row.names = FALSE)
+## calculate accuracy of model
+accuracy = sum(Prediction==test$Survived)/length(Prediction)
+print (sprintf("Accuracy = %3.2f %%",accuracy*100)) ### 81.84% accuracy of model using random forest
+#########################################################################
+
 
 default=rpart.control()
 
