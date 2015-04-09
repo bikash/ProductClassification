@@ -47,7 +47,9 @@ test1 = train2[1:1000,]
 
 library(rpart)
 fit <- rpart(class ~ ., data=train1, method="class")
+pdf("graph/DecisonTreePlot.pdf",bg="white")
 fancyRpartPlot(fit)
+dev.off()
 # prediction
 pred <- predict(fit, test1, type = "class")
 out <- data.frame(id = train$id[1:1000], class = pred)
