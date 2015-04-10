@@ -56,8 +56,7 @@ trind <- trind[sample(nrow(trind)),]
 
 # Run Cross Valication
 cv.nround = 200
-bst.cv = xgb.cv(param=param, data = x[trind,], label = y,
-                nfold = 3, nrounds=cv.nround)
+bst.cv = xgb.cv(param=param, data = x[trind,], label = y, nfold = 3, nrounds=cv.nround)
 
 #shuffle
 trind <- trind[sample(nrow(trind)),]
