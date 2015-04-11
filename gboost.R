@@ -23,6 +23,7 @@ require(methods)
 ##########################################################################
 ########Cleaning up training dataset #####################################
 ##########################################################################
+
 print("Data Cleaning up process......")
 train <- read.csv("data/train.csv", header=TRUE)
 test <- read.csv("data/test.csv", header=TRUE)
