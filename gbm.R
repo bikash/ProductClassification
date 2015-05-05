@@ -44,14 +44,5 @@ pred = format(pred, digits=2,scientific=F) # shrink the size of submission
 
 pred = data.frame(test$id,pred)
 names(pred) = c('id', paste0('Class_',1:9))
-# pred$Class_1[pred$Class_1< 0] <- 0
-# pred$Class_2[pred$Class_2< 0] <- 0
-# pred$Class_3[pred$Class_3< 0] <- 0
-# pred$Class_4[pred$Class_4< 0] <- 0
-# pred$Class_5[pred$Class_5< 0] <- 0
-# pred$Class_6[pred$Class_6< 0] <- 0
-# pred$Class_7[pred$Class_7< 0] <- 0
-# pred$Class_8[pred$Class_8< 0] <- 0
-# pred$Class_9[pred$Class_9< 0] <- 0.0
 
 write.csv(pred,file='output/gbm.csv', quote=FALSE,row.names=FALSE)
