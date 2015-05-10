@@ -122,7 +122,7 @@ pic.pca <- pic.pca + annotate("text", x = 43, y = 0.93, label = paste(as.charact
 pic.pca <- pic.pca + annotate("text", x = 43, y = 0.88, label = "PC43")
 pic.pca <- pic.pca + ggtitle("Principal Component Analysis") + xlab("Principal Component") + ylab("Variance Explained")
 pic.pca
-ggsave("graph/pca.png", pic, width=8, height=6, units="in")
+ggsave("graph/pca.png", pic.pca, width=8, height=6, units="in")
 
 
 trunc <- res$x[,1 : explain90] %*% t(res$rotation[,1 : explain90])
@@ -143,5 +143,7 @@ pic1 <- pic1 + ggtitle("Class Distribution") + xlab("Classes") + ylab("Count")
 pic1 <- pic1 + geom_text(aes(label = as.numeric(table(train$target))), vjust = -0.2)
 pic
 ggsave("graph/dist.png", pic, width=8, height=6, units="in")
+
+
 
 
