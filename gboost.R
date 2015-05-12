@@ -17,7 +17,7 @@
 getwd()
 setwd("/Users/bikash/repos/kaggle/ProductClassification/")
 
-devtools::install_github('dmlc/xgboost',subdir='R-package')
+#devtools::install_github('dmlc/xgboost',subdir='R-package')
 library(xgboost)
 require(methods)
 ##########################################################################
@@ -54,9 +54,11 @@ param <- list("objective" = "multi:softprob",
               "lambda_bias" = 0,
               "gamma" = 1,
               "alpha" = .8,
-              "min_child_weight" = 3,
+              "min_child_weight" = 4,
               "subsample" = .9,
               "colsample_bytree" = .9)
+
+
 
 # Run Cross Valication
 cv.nround = 91
@@ -77,7 +79,7 @@ pred = t(pred)
 pred = format(pred, digits=2,scientific=F) # shrink the size of submission
 pred = data.frame(1:nrow(pred),pred)
 names(pred) = c('id', paste0('Class_',1:9))
-write.csv(pred,file='output/xgboost_6.csv', quote=FALSE,row.names=FALSE)
+write.csv(pred,file='output/xgboost_7.csv', quote=FALSE,row.names=FALSE)
 
 
 ###############################
