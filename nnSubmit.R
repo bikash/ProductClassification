@@ -1,6 +1,6 @@
 
-setwd("/Users/bikash/repos/kaggle/ProductClassification/")
-
+#setwd("/Users/bikash/repos/kaggle/ProductClassification/")
+setwd("/home/ekstern/haisen/bikash/kaggle/ProductClassification/")
 require(caret); require(doParallel); require(randomForest); require(xgboost)
 
 cl <- makeCluster(detectCores())
@@ -13,7 +13,13 @@ print("Data Cleaning up process......")
 raw_data <- read.csv("data/train.csv", header=TRUE)
 testData <- read.csv("data/test.csv", header=TRUE)
 
-
+##Metric
+ll <- function(predicted, actual, eps=1e-15) {
+  predicted[predicted < eps] <- eps
+  predicted[predicted > 1 - eps] <- 1 - eps
+  score <- -1/nrow(actual)*(sum(actual*log(predicted)))
+  score
+}
 
 # Ground truth ------------------------------------------------------------
 pred <- train[ , ncol(train), drop = TRUE]

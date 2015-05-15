@@ -20,6 +20,7 @@ setwd("/Users/bikash/repos/kaggle/ProductClassification/")
 #devtools::install_github('dmlc/xgboost',subdir='R-package')
 library(xgboost)
 require(methods)
+library(caret)
 ##########################################################################
 ########Cleaning up training dataset #####################################
 ##########################################################################
