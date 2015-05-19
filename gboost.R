@@ -83,6 +83,8 @@ names(pred) = c('id', paste0('Class_',1:9))
 write.csv(pred,file='output/xgboost_7.csv', quote=FALSE,row.names=FALSE)
 
 
+
+
 ###############################
 ##### t-SNE Visualization #####
 ###############################
@@ -150,3 +152,165 @@ ggsave("graph/dist.png", pic, width=8, height=6, units="in")
 
 
 
+
+library(h2o)
+
+setwd("/Users/bikash/repos/kaggle/ProductClassification/")
+localH2O <- h2o.init(nthread=16, max_mem_size="40g", min_mem_size="40g")
+
+train.full <- read.csv("data/train.csv", header=TRUE)
+test.full <- read.csv("data/test.csv", header=TRUE)
+
+
+#First I will create a separate predictions frame and CV structure since they will 
+#be used for both (and should be able to be used with other models as well)---------
+predictions <- train.full[, ncol(train.full)]
+
+#Matrix for storing predicted probablities; needs to be dimensions of train.only
+pred.prob <- model.matrix(~ predictions - 1, data = predictions) 
+#Using caret to split the data for CV-----------------------------------------------
+set.seed(1234)
+cv.index <- createDataPartition(predictions, p = 0.25, list = FALSE)
+
+#Removing class label column and IDs; setting IDs aside for use later---------------
+train <- train.full[-ncol(train.full)]
+ids <- train[, 1]
+train <- train[-1]
+test.ids <- test.full[, 1]
+test <- test.full[, -1]
+
+#Partitioning to training and cv sets-----------------------------------------------
+train.only <- train[-cv.index,]
+cv <- train[cv.index, ]
+
+#Setting up train/cv formats for xgboost model--------------------------------------
+y <- predictions[-cv.index] #Response variable from train.only
+y <- gsub("Class_", "", y)  #Just class number
+y <- as.integer(y) - 1
+
+x <- rbind(train.only, cv)#Predictors from train.only and cv sets
+x <- as.matrix(x)         #Converting to matrix
+x <- matrix(as.numeric(x), nrow(x), ncol(x)) #Converting chr to num 
+
+trind <- 1:length(y)      #index to identify training data
+cvind <- (length(y)+1):nrow(x)
+
+#Test set as matrix-----------------------------------------------------------------
+x.test <- as.matrix(test.full)
+x.test <- matrix(as.numeric(x.test), nrow(x.test), ncol(x.test))
+
+###############################Xgboost Modeling#####################################
+#Random search function used for tuning parameters----------------------------------
+random_search <- function(n_set){
+  #param is a list of parameters
+  
+  # Set necessary parameter
+  param <- list("objective" = "multi:softprob",
+                "max_depth"=6,
+                "eta"=0.1,
+                "subsample"=0.7,
+                "colsample_bytree"= 1,
+                "gamma"=2,
+                "min_child_weight"=4,
+                "eval_metric" = "mlogloss",
+                "silent"=1,
+                "num_class" = 9,
+                "nthread" = 8)
+  
+  param_list <- list()
+  
+  for (i in seq(n_set)){
+    
+    ## n_par <- length(param)
+    param$max_depth <- sample(3:10,1, replace=T)
+    param$eta <- runif(1,0.01,0.6)
+    param$subsample <- runif(1,0.1,1)
+    param$colsample_bytree <- runif(1,0.1,1)
+    param$min_child_weight <- sample(1:17,1, replace=T)
+    param$gamma <- runif(1,0.1,10)
+    param$min_child_weight <- sample(1:15,1, replace=T)
+    param_list[[i]] <- param
+    
+  }
+  
+  return(param_list)
+}
+
+#Set of parameters to test----------------------------------------------------------
+xgb.param <- random_search(10)
+#Running CV before doing ensemble CV------------------------------------------------
+cv.nround = 91
+TrainRes <- matrix(, nrow=cv.nround, ncol=length(xgb.param))
+TestRes <- matrix(, nrow= cv.nround, ncol=length(xgb.param))
+
+for(i in 1:length(param)){
+  print(paste0("CV Round", i))
+  bst.cv <- xgb.cv(param = xgb.param[[i]], data = x[trind,], label = y, 
+                   nfold = 3, nrounds=cv.nround)
+  TrainRes[,i] <- as.numeric(bst.cv[,train.mlogloss.mean])
+  TestRes[,i]  <- as.numeric(bst.cv[,test.mlogloss.mean])
+  
+}
+
+#Already found my best parameters in xgboost_script.R, so just inputting here-------
+final.xgb.params <- list("objective" = "multi:softprob",
+                         "max_depth"=9,
+                         "eta"=0.05431259,
+                         "subsample"=0.7851139 ,
+                         "colsample_bytree"= 0.3923619,
+                         "gamma"=0.5,
+                         "min_child_weight"=5,
+                         "eval_metric" = "mlogloss",
+                         "silent"=1,
+                         "num_class" = 9,
+                         "nthread" = 8) 
+#Training solo xgboost model--------------------------------------------------------
+nround = 712
+xgb.bst <- xgboost(param = final.xgb.params, data = x[trind,], label = y, 
+                   nrounds = nround)
+
+
+##################################CV before Ensembling##############################
+xgb.model.prob <- predict(xgb.bst, newdata = x[cvind,])
+xgb.model.prob <- t(matrix(xgb.model.prob,9,length(xgb.model.prob)/9))
+
+#Calculating logloss----------------------------------------------------------------
+#logloss function; unsure of how accurately this reflects LB calculations-----------
+ll <- function(predicted, actual, eps = 1e-15){
+  predicted[predicted < eps] <- eps
+  predicted[predicted > 1 - eps] <- 1 - eps
+  score <- -1/nrow(actual)*(sum(actual*log(predicted)))
+  score
+}
+
+#Calculating ll for individual models-----------------------------------------------
+xgb.model.ll <- ll(xgb.model.prob, pred.prob[cv.index,])
+
+################################Building Test Probabilities#########################
+xgb.bst.prob.test <- predict(xgb.bst, newdata = x.test[, -1])
+
+
+
+
+### Neural Net
+model_nn <- nnet(x = train.full[,c(2:94)], y = train.full$target, data=train.full[,c(2:95)], size = 10, 
+                 rang = 0.5, decay = 0.1, linout = FALSE, 
+                 MaxNWts=10000, trace = FALSE)
+Y_hat_ts_nn <- predict(model_nn, test.full) + 10^-15
+result_nn <- max.col(Y_hat_ts_nn)
+
+
+#Save-------------------------------------------------------------------------------
+
+# Make prediction
+pred = xgb.bst.prob.test
+pred = matrix(pred,9,length(pred)/9)
+pred = t(pred)
+
+# Output submission
+pred = format(pred, digits=2,scientific=F) # shrink the size of submission
+pred = data.frame(1:nrow(pred),pred)
+names(pred) = c('id', paste0('Class_',1:9))
+write.csv(pred,file='output/xgboost_8.csv', quote=FALSE,row.names=FALSE)
+
+##LB 0.45963
