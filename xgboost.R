@@ -14,19 +14,18 @@
 #################################################################################################
 
 ### setting path of repo folder.
-getwd()
 setwd("/Users/bikash/repos/kaggle/ProductClassification/")
 
-#devtools::install_github('dmlc/xgboost',subdir='R-package')
-library(xgboost)
+
+library(xgboost) ## xgboost
 require(methods)
-require(data.table)
+require(data.table) ## viewing data
 require(magrittr)
 ##########################################################################
 ########Cleaning up training dataset #####################################
 ##########################################################################
 
-print("Data Cleaning up process......")
+print("Data reading process......")
 train <- read.csv("data/train.csv", header=TRUE)
 test <- read.csv("data/test.csv", header=TRUE)
 
